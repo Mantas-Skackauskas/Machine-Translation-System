@@ -1,0 +1,158 @@
+import javax.sound.midi.SysexMessage;
+import java.io.*;
+import java.util.*;
+
+
+public class Translator {
+
+    //defines a dictionary
+    private Map<String, Word> dictionary = ParseDictionary("../dictionary.csv");
+    //  printDictionary(dictionary);
+    //user input
+
+
+    //parses dictionary to the program
+
+    public static Map<String, Word> ParseDictionary(String fileLocation) {
+        Map<String, Word> dictionary = new LinkedHashMap<String, Word>();
+
+        String line;
+
+        try {
+
+            BufferedReader br = new BufferedReader(new FileReader(fileLocation));
+
+            while ((line = br.readLine()) != null) {
+
+                String[] string = line.split(",");
+                Word Word = new Word(string[0], string[1], string[2]);
+                dictionary.put(string[0], Word);
+
+            }
+
+
+            dictionary.put(",", new Word(",", ",", "comma"));
+            dictionary.put(".", new Word(".", ".", "end"));
+            dictionary.put("!", new Word("!", "!", "end"));
+            dictionary.put("?", new Word("?", "?", "question"));
+
+            dictionary.get("people").setPlural(true);
+
+            //   Word word = new Word()
+
+            //     dictionary.get(Word("gf","fdas"))
+        } catch (IOException e) {
+        }
+
+        return dictionary;
+
+    }
+
+/*    public static Map<String,String> getEnglishTypes(Map<Word,Word> map) {
+        Map<String,String> englishTypes = new LinkedHashMap<String,String>();
+
+        for ( Map.Entry<Word, Word> entry : map.entrySet()) {
+            String englishName = entry.getValue().getEnglish();
+            String englishType = entry.getValue().getType();
+
+            englishTypes.put(englishName,englishType);
+
+        }
+
+        return englishTypes;
+    }*/
+
+    //prints whole dictionary
+    public static void printDictionary(Map<String, Word> dictionary) {
+
+        int count = 0;
+
+        for (String name : dictionary.keySet()) {
+
+            String spanish = dictionary.get(name).getSpanish();
+            String english = dictionary.get(name).getEnglish();
+            String type = dictionary.get(name).getType();
+            boolean plural = dictionary.get(name).getPlural();
+
+            count++;
+
+            //displays whole dictionary to terminal
+            System.out.println("\n\nEnglish: " + english + " \nSpanish: " + spanish + " \nType: " + type + "\nPlural: " + plural);
+
+        }
+        System.out.println("\nTotal words: " + count);
+    }
+
+    public String setFirstLettertoUpperCase(String string) {
+
+        char lowToUpper = Character.toUpperCase(string.charAt(0));
+        StringBuilder newString = new StringBuilder(string);
+        newString.setCharAt(0, lowToUpper);
+
+
+        return newString.toString();
+    }
+
+
+    public String fixString(String string) {
+
+        string = string.replaceAll("\\s+(?=[(),.?])", "");
+        string = string.replaceAll("(?=[(),.?])+\\s+", " ");
+
+        string = string.trim().replaceAll(" +", " ");
+
+        string = setFirstLettertoUpperCase(string);
+
+        if (Character.isLetterOrDigit(string.charAt(string.length() - 1))) {
+
+            string = string + '.';
+
+        }
+
+        return string;
+
+    }
+
+
+    public String getTranslatedText(String newInputText) {
+
+        String answerString = "";
+
+        List<Sentence> sentences = new ArrayList<>();
+
+        int sentenceIndex = 0;
+        String stringRegex = ".*[a-zA-Z]+.*";
+        String temporaryString = "";
+        newInputText = fixString(newInputText);
+        System.out.println(newInputText);
+        //reading sentences
+        for (int i = 0; i < newInputText.length(); i++) {
+            if (newInputText.charAt(i) == '.' || newInputText.charAt(i) == '!' || newInputText.charAt(i) == '?') {
+
+                temporaryString = newInputText.substring(sentenceIndex, i) + newInputText.charAt(i);
+
+                if (temporaryString.matches(stringRegex)) {
+                    sentences.add(new Sentence(temporaryString));
+                    System.out.println(temporaryString);
+                    sentenceIndex = i + 2;
+                }
+
+            }
+        }
+
+        sentenceIndex = 0;
+
+        String temporaryAnswer="";
+        //transforming sentences
+        for (Sentence s : sentences) {
+            temporaryAnswer=fixString(s.TranslateSentence(dictionary));
+            answerString += temporaryAnswer+" ";
+
+
+        }
+
+        return answerString;
+
+    }
+
+}
